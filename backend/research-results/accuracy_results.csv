@@ -1,0 +1,7 @@
+model,accuracy
+baseline,99.72
+hue_only,99.56
+saturation_only,99.75
+brightness_only,99.66
+broad_colorjitter,99.73
+all_factor,99.59

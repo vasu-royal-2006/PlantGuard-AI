@@ -1,0 +1,25 @@
+# Virtual environments
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Node
+node_modules/
+dist/
+frontend/dist/
+
+# Environment files
+.env
+.env.local
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Temporary model files
+*.pth.tmp
