@@ -51,7 +51,9 @@ def predict_all(
 
     for key in MODEL_KEYS:
         net = models[key]
-        logits = net(tensor)
+        model_dtype = next(net.parameters()).dtype
+        x = tensor.to(dtype=model_dtype)
+        logits = net(x).float()
         probs = torch.softmax(logits, dim=1)
         confidence, idx = probs.max(dim=1)
         predictions[key] = SinglePrediction(

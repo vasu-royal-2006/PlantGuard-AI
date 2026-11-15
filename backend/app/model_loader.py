@@ -110,6 +110,9 @@ def load_models(
         net.eval()
         for p in net.parameters():
             p.requires_grad = False
+        # Convert to bfloat16 to halve RAM footprint (22.4 MB vs 44.8 MB per model)
+        # Allows all 6 models to comfortably fit within 512 MB container limits
+        net.to(torch.bfloat16)
         net.to(device)
         loaded[key] = net
 
