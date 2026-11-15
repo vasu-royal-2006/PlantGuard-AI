@@ -64,6 +64,16 @@ def _build_resnet18(num_classes: int = NUM_CLASSES) -> models.ResNet:
     return model
 
 
+def _trim_memory():
+    """Force glibc to release free memory back to the OS in Linux containers."""
+    gc.collect()
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
+
+
 def load_models(
     model_dir: Path,
     class_names: list[str],
@@ -83,7 +93,8 @@ def load_models(
         pth = model_dir / f"{key}.pth"
         logger.info("Loading checkpoint: %s", pth.name)
 
-        ckpt = torch.load(pth, map_location=device)
+        # Use mmap=True to avoid loading raw file bytes into heap memory
+        ckpt = torch.load(pth, map_location=device, mmap=True)
 
         # Validate embedded class_names matches canonical list
         embedded = ckpt.get("class_names")
@@ -102,9 +113,9 @@ def load_models(
         net.to(device)
         loaded[key] = net
 
-        # Immediately free the checkpoint dict and run garbage collection
+        # Immediately delete checkpoint dict and release memory back to kernel
         del ckpt
-        gc.collect()
+        _trim_memory()
 
     return loaded
 
@@ -166,6 +177,7 @@ def startup_load(
     logger.info("Validated research CSV files")
 
     # 5. Ready
+    _trim_memory()
     logger.info("PlantGuard AI backend ready — 6 models loaded on %s", device)
 
     return loaded_models, class_names, device
