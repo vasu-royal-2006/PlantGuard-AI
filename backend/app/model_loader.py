@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import json
 import logging
 from collections import OrderedDict
@@ -13,6 +14,10 @@ import torch.nn as nn
 from torchvision import models
 
 logger = logging.getLogger("plantguard")
+
+# Restrict PyTorch thread pool to reduce memory overhead in constrained environments
+torch.set_num_threads(1)
+torch.set_grad_enabled(False)
 
 MODEL_KEYS: list[str] = [
     "baseline",
@@ -92,8 +97,14 @@ def load_models(
         net = _build_resnet18(NUM_CLASSES)
         net.load_state_dict(ckpt["state_dict"])  # NO strict=False
         net.eval()
+        for p in net.parameters():
+            p.requires_grad = False
         net.to(device)
         loaded[key] = net
+
+        # Immediately free the checkpoint dict and run garbage collection
+        del ckpt
+        gc.collect()
 
     return loaded
 
